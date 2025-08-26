@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Storage Manager - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+            --border-color: #e5e7eb;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Bucket Control Panel */
+        .bucket-control {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        .bucket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .bucket-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bucket-dropdown {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .bucket-dropdown:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .bucket-controls {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Navigation Breadcrumbs */
+        .breadcrumb-nav {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .breadcrumb-list {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .breadcrumb-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .breadcrumb-current {
+            background: var(--light-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .breadcrumb-separator {
+            color: var(--text-secondary);
+            margin: 0 0.25rem;
+        }
+
+        /* Action Panels */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .action-panel:hover {
+            transform: translateY(-4px);
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Alert Messages */
+        .alerts-container {
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideInAlert 0.5s ease;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-left-color: var(--success-color);
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-left-color: var(--danger-color);
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left-color: var(--primary-color);
+        }
+
+        @keyframes slideInAlert {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* File Grid */
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .content-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .item-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+            border-color: var(--primary-color);
+        }
+
+        .item-card.folder-card {
+            border-color: var(--warning-color);
+            background: linear-gradient(135deg, #fefce8, #fef3c7);
+        }
+
+        .item-card.file-card {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        }
+
+        .item-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .item-icon {
+            font-size: 2rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .folder-card .item-icon {
+            color: var(--warning-color);
+        }
+
+        .file-card .item-icon {
+            color: var(--primary-color);
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            word-break: break-word;
+        }
+
+        .item-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .item-name a:hover {
+            color: var(--primary-color);
+        }
+
+        .item-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .item-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .empty-content {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .empty-message {
+            font-size: 1rem;
+        }
+
+        /* Hidden Forms */
+        .hidden-form {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .page-header {
+                padding: 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .bucket-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .bucket-controls {
+                justify-content: center;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Page Header -->
+        <header class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-cloud"></i>
+                Cloud Storage Manager
+            </h1>
+            <p class="page-subtitle">Manage your files and folders with ease</p>
+        </header>
+
+        <!-- Bucket Management -->
+        <section class="bucket-control">
+            <div class="bucket-header">
+                <div class="bucket-selector">
+                    <i class="fas fa-database"></i>
+                    <strong>Storage Bucket:</strong>
+                    <select class="bucket-dropdown" onchange="navigateToBucket(this.value)" id="bucketSelector">
+                        {% for bucket in available_buckets %}
+                            <option value="{{ bucket.name }}" {% if bucket.name == current_bucket %}selected{% endif %}>
+                                {{ bucket.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="bucket-controls">
+                    <button onclick="toggleBucketForm()" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Add Bucket
+                    </button>
+                    <button onclick="confirmBucketDeletion('{{ current_bucket }}')" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                    <a href="{{ url_for('show_bucket_information') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-info-circle"></i> Details
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hidden Bucket Creation Form -->
+            <div id="bucketCreationForm" class="hidden-form">
+                <div class="form-header">
+                    <h3 class="form-title">
+                        <i class="fas fa-plus-circle"></i> Create New Bucket
+                    </h3>
+                    <button onclick="toggleBucketForm()" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form method="post" action="{{ url_for('add_new_bucket') }}">
+                    <div class="form-group">
+                        <label class="form-label">Bucket Name</label>
+                        <input type="text" name="bucket_name" class="form-input" required 
+                               placeholder="Enter bucket name" pattern="[a-z0-9-]+" 
+                               title="Use lowercase letters, numbers, and hyphens only">
+                    </div>
+                    <input type="hidden" name="current_bucket" value="{{ current_bucket }}">
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-rocket"></i> Create Bucket
+                        </button>
+                        <button type="button" onclick="toggleBucketForm()" class="btn btn-secondary">
+                            <i class="fas fa-ban"></i> Cancel
+                        </button>
+                    </div>
+                    <small style="color: var(--text-secondary);">
+                        Note: Bucket names must follow naming conventions (lowercase, alphanumeric, hyphens)
+                    </small>
+                </form>
+            </div>
+        </section>
+
+        <!-- Navigation Breadcrumbs -->
+        <nav class="breadcrumb-nav">
+            <div class="breadcrumb-list">
+                <i class="fas fa-map-marker-alt"></i>
+                {% for nav_item in navigation %}
+                    {% if loop.last %}
+                        <span class="breadcrumb-current">{{ nav_item.title }}</span>
+                    {% else %}
+                        <a href="{{ url_for('home_page', bucket=current_bucket, folder=nav_item.url) }}" class="breadcrumb-link">
+                            {{ nav_item.title }}
+                        </a>
+                        <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </nav>
+
+        <!-- Alert Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alerts-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}">
+                            <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Action Panels Grid -->
+        <div class="action-grid">
+            <!-- File Upload Panel -->
+            <div class="action-panel">
+                <h3 class="panel-title">
+                    <i class="fas fa-upload"></i> Upload Files
+                </h3>
+                <form method="post" action="{{ url_for('handle_file_upload', bucket_name=current_bucket) }}" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label class="form-label">Choose File</label>
+                        <input type="file" name="file" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Directory</label>
+                        <input type="text" name="folder" class="form-input" 
+                               value="{{ current_path }}" 
+                               placeholder="Leave empty for root directory">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload Now
+                    </button>
+                </form>
+            </div>
+
+            <!-- Directory Creation Panel -->
+            <div class="action-panel">
+                <h3 class="panel-title">
+                    <i class="fas fa-folder-plus"></i> New Directory
+                </h3>
+                <form method="post" action="{{ url_for('create_new_directory', bucket_name=current_bucket) }}">
+                    <div class="form-group">
+                        <label class="form-label">Directory Name</label>
+                        <input type="text" name="folder_name" class="form-input" required 
+                               placeholder="Enter directory name">
+                    </div>
+                    <input type="hidden" name="parent_folder" value="{{ current_path }}">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-folder"></i> Create Directory
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- File Content Display -->
+        <section class="content-section">
+            <div class="content-header">
+                <h2 class="content-title">
+                    <i class="fas fa-list"></i> Directory Contents
+                </h2>
+                <span style="color: var(--text-secondary);">
+                    {{ items|length }} item{{ 's' if items|length != 1 else '' }}
+                </span>
+            </div>
+
+            {% if items %}
+                <div class="items-grid">
+                    {% for item in items %}
+                        <div class="item-card {{ 'folder-card' if item.is_folder else 'file-card' }}">
+                            <div class="item-header">
+                                <div class="item-icon">
+                                    {% if item.is_folder %}
+                                        <i class="fas fa-folder"></i>
+                                    {% else %}
+                                        <i class="fas fa-file"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="item-info">
+                                    <div class="item-name">
+                                        {% if item.is_folder %}
+                                            <a href="{{ url_for('home_page', bucket=current_bucket, folder=item.full_path) }}">
+                                                {{ item.name }}
+                                            </a>
+                                        {% else %}
+                                            {{ item.name }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="item-meta">
+                                        {% if item.is_folder %}
+                                            Directory
+                                        {% else %}
+                                            File • {{ helper.format_file_size(item.size_bytes) }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="item-actions">
+                                {% if item.is_folder %}
+                                    <a href="{{ url_for('home_page', bucket=current_bucket, folder=item.full_path) }}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-folder-open"></i> Open
+                                    </a>
+                                    <a href="{{ url_for('remove_directory_item', bucket_name=current_bucket, path=item.full_path, parent=current_path) }}" 
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Delete this directory and all its contents?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('get_file_download', bucket_name=current_bucket, path=item.full_path) }}" 
+                                       class="btn btn-success btn-sm">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                    <a href="{{ url_for('duplicate_file_item', bucket_name=current_bucket, path=item.full_path, folder=current_path) }}" 
+                                       class="btn btn-secondary btn-sm">
+                                        <i class="fas fa-copy"></i> Duplicate
+                                    </a>
+                                    <a href="{{ url_for('relocate_file_item', bucket_name=current_bucket, path=item.full_path, folder=current_path) }}" 
+                                       class="btn btn-secondary btn-sm">
+                                        <i class="fas fa-arrows-alt"></i> Relocate
+                                    </a>
+                                    <a href="{{ url_for('remove_file_item', bucket_name=current_bucket, path=item.full_path, folder=current_path) }}" 
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Delete this file permanently?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-content">
+                    <div class="empty-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3 class="empty-title">Directory is Empty</h3>
+                    <p class="empty-message">
+                        Start by uploading files or creating new directories using the panels above.
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content" id="modalContent">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Global state management
+        const AppState = {
+            currentBucket: '{{ current_bucket }}',
+            currentPath: '{{ current_path }}',
+            isLoading: false
+        };
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            setupAutoHideAlerts();
+            updateBucketSelector();
+        });
+
+        function initializeEventListeners() {
+            // Form submission handlers
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', handleFormSubmission);
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboardShortcuts);
+        }
+
+        function handleFormSubmission(event) {
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            if (submitButton && !AppState.isLoading) {
+                AppState.isLoading = true;
+                const originalContent = submitButton.innerHTML;
+                submitButton.innerHTML = '<span class="spinner"></span> Processing...';
+                submitButton.disabled = true;
+                
+                // Reset after timeout
+                setTimeout(() => {
+                    submitButton.innerHTML = originalContent;
+                    submitButton.disabled = false;
+                    AppState.isLoading = false;
+                }, 4000);
+            }
+        }
+
+        function handleKeyboardShortcuts(event) {
+            // Ctrl/Cmd + B: Toggle bucket form
+            if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
+                event.preventDefault();
+                toggleBucketForm();
+            }
+            
+            // Escape: Close modals/forms
+            if (event.key === 'Escape') {
+                closeAllModals();
+            }
+        }
+
+        function setupAutoHideAlerts() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'all 0.5s ease';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateX(-100%)';
+                    setTimeout(() => alert.remove(), 500);
+                }, 6000);
+            });
+        }
+
+        function updateBucketSelector() {
+            const selector = document.getElementById('bucketSelector');
+            if (selector) {
+                selector.value = AppState.currentBucket;
+            }
+        }
+
+        // Bucket management functions
+        function navigateToBucket(bucketName) {
+            if (bucketName && bucketName !== AppState.currentBucket) {
+                window.location.href = `{{ url_for('home_page') }}?bucket=${encodeURIComponent(bucketName)}`;
+            }
+        }
+
+        function toggleBucketForm() {
+            const form = document.getElementById('bucketCreationForm');
+            const isVisible = form.style.display !== 'none';
+            
+            if (isVisible) {
+                form.style.display = 'none';
+            } else {
+                form.style.display = 'block';
+                const nameInput = form.querySelector('input[name="bucket_name"]');
+                if (nameInput) {
+                    nameInput.focus();
+                }
+            }
+        }
+
+        function confirmBucketDeletion(bucketName) {
+            const confirmMessage = `⚠️ CRITICAL WARNING ⚠️\n\nYou are about to permanently delete bucket: "${bucketName}"\n\nThis will remove ALL files and folders inside this bucket.\nThis action is IRREVERSIBLE!\n\nDo you want to proceed?`;
+            
+            if (confirm(confirmMessage)) {
+                const finalConfirm = `🚨 FINAL CONFIRMATION 🚨\n\nLast chance to cancel!\n\nDelete "${bucketName}" and lose all data forever?`;
+                if (confirm(finalConfirm)) {
+                    window.location.href = `{{ url_for('remove_bucket_completely', bucket_name='') }}${encodeURIComponent(bucketName)}`;
+                }
+            }
+        }
+
+        function closeAllModals() {
+            // Close bucket form
+            const bucketForm = document.getElementById('bucketCreationForm');
+            if (bucketForm) {
+                bucketForm.style.display = 'none';
+            }
+            
+            // Close modal overlay
+            const modal = document.getElementById('modalOverlay');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // File operation helpers
+        function showLoadingState(element, message = 'Processing...') {
+            if (element) {
+                element.classList.add('loading');
+                const originalText = element.textContent;
+                element.innerHTML = `<span class="spinner"></span> ${message}`;
+                
+                setTimeout(() => {
+                    element.classList.remove('loading');
+                    element.innerHTML = originalText;
+                }, 3000);
+            }
+        }
+
+        // Enhanced form validation
+        function validateForm(form) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.style.borderColor = 'var(--danger-color)';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = 'var(--border-color)';
+                }
+            });
+            
+            return isValid;
+        }
+
+        // Add real-time validation to inputs
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.hasAttribute('required')) {
+                    if (this.value.trim()) {
+                        this.style.borderColor = 'var(--success-color)';
+                    } else {
+                        this.style.borderColor = 'var(--danger-color)';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

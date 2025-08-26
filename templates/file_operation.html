@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ operation_type }} File - Cloud Storage Manager</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --color-dark: #2d3748;
+            --color-light: #f7fafc;
+            --color-border: #e2e8f0;
+            --color-text: #4a5568;
+            --color-muted: #718096;
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: var(--color-text);
+        }
+
+        .operation-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: var(--shadow-xl);
+            padding: 3rem;
+            width: 100%;
+            max-width: 600px;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .operation-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .operation-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .operation-subtitle {
+            color: var(--color-muted);
+            font-size: 1.1rem;
+        }
+
+        .source-info {
+            background: linear-gradient(135deg, #fef5e7, #fdf2f8);
+            border: 2px solid #fed7e2;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .source-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--gradient-secondary);
+        }
+
+        .source-label {
+            font-weight: 600;
+            color: var(--color-dark);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .source-path {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            color: #e53e3e;
+            font-weight: 600;
+            border: 1px solid rgba(229, 62, 62, 0.2);
+            word-break: break-all;
+            font-size: 0.9rem;
+        }
+
+        .operation-form {
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--color-dark);
+            font-size: 1rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--color-border);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .input-field:valid {
+            border-color: var(--color-success, #10b981);
+        }
+
+        .path-hints {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #0369a1;
+        }
+
+        .path-hints .hint-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1e40af;
+        }
+
+        .path-example {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            color: #dc2626;
+            margin: 0 0.25rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            min-width: 140px;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #a0aec0, #718096);
+            color: white;
+            box-shadow: 0 6px 20px rgba(160, 174, 192, 0.3);
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            transform: translateY(-3px);
+        }
+
+        .loading-state {
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: rotate 1s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Progress indicator */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--color-border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: 200px 0; }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .operation-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+            
+            .operation-title {
+                font-size: 1.5rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-btn {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+
+        /* Enhanced visual effects */
+        .operation-container {
+            position: relative;
+        }
+
+        .operation-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: var(--gradient-primary);
+            border-radius: 26px;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating background particles -->
+    <div class="floating-particles" id="particles"></div>
+
+    <div class="operation-container">
+        <div class="operation-header">
+            <h1 class="operation-title">
+                {% if operation_type == 'Duplicate' %}
+                    <i class="fas fa-clone"></i>
+                    Duplicate File
+                {% else %}
+                    <i class="fas fa-exchange-alt"></i>
+                    Relocate File
+                {% endif %}
+            </h1>
+            <p class="operation-subtitle">
+                {% if operation_type == 'Duplicate' %}
+                    Create a copy of your file in a new location
+                {% else %}
+                    Move your file to a different location
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="source-info">
+            <div class="source-label">
+                <i class="fas fa-file"></i>
+                Source File:
+            </div>
+            <div class="source-path">{{ source_file }}</div>
+        </div>
+
+        <form method="post" class="operation-form" id="operationForm">
+            <div class="input-group">
+                <label for="destination_path" class="input-label">
+                    <i class="fas fa-{{ 'copy' if operation_type == 'Duplicate' else 'arrow-right' }}"></i>
+                    {% if operation_type == 'Duplicate' %}
+                        Duplicate to:
+                    {% else %}
+                        Relocate to:
+                    {% endif %}
+                </label>
+                <input type="text" 
+                       id="destination_path" 
+                       name="new_path" 
+                       class="input-field"
+                       value="{{ suggested_path }}" 
+                       required 
+                       placeholder="Enter destination path"
+                       autocomplete="off">
+                
+                <div class="path-hints">
+                    <div class="hint-title">
+                        <i class="fas fa-lightbulb"></i>
+                        Path Examples:
+                    </div>
+                    <div>
+                        • Same directory: <span class="path-example">new_filename.ext</span><br>
+                        • Move to subfolder: <span class="path-example">documents/filename.ext</span><br>
+                        • Deep nesting: <span class="path-example">projects/2024/Q1/file.ext</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="action-btn btn-primary" id="submitButton">
+                    {% if operation_type == 'Duplicate' %}
+                        <i class="fas fa-clone"></i>
+                        Create Duplicate
+                    {% else %}
+                        <i class="fas fa-location-arrow"></i>
+                        Relocate File
+                    {% endif %}
+                </button>
+                <a href="{{ url_for('home_page', bucket=bucket, folder=folder) }}" 
+                   class="action-btn btn-cancel">
+                    <i class="fas fa-arrow-left"></i>
+                    Go Back
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Application state
+        const OperationApp = {
+            isProcessing: false,
+            operationType: '{{ operation_type }}',
+            originalPath: '{{ source_file }}',
+            currentBucket: '{{ bucket }}',
+            currentFolder: '{{ folder }}'
+        };
+
+        // Initialize app when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApplication();
+        });
+
+        function initializeApplication() {
+            setupFormHandlers();
+            setupInputValidation();
+            createBackgroundParticles();
+            focusDestinationInput();
+        }
+
+        function setupFormHandlers() {
+            const form = document.getElementById('operationForm');
+            const submitBtn = document.getElementById('submitButton');
+            
+            form.addEventListener('submit', function(event) {
+                if (OperationApp.isProcessing) {
+                    event.preventDefault();
+                    return;
+                }
+
+                const destinationPath = document.getElementById('destination_path').value.trim();
+                
+                if (!destinationPath) {
+                    event.preventDefault();
+                    showValidationError('Please enter a destination path!');
+                    return;
+                }
+
+                if (destinationPath === OperationApp.originalPath) {
+                    event.preventDefault();
+                    showValidationError('Destination cannot be the same as source!');
+                    return;
+                }
+
+                // Start loading state
+                startLoadingState();
+            });
+        }
+
+        function setupInputValidation() {
+            const pathInput = document.getElementById('destination_path');
+            
+            pathInput.addEventListener('input', function() {
+                validatePathInput(this);
+            });
+
+            pathInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    document.getElementById('operationForm').requestSubmit();
+                }
+            });
+        }
+
+        function validatePathInput(input) {
+            const value = input.value.trim();
+            const isValid = value.length > 0 && value !== OperationApp.originalPath;
+            
+            if (isValid) {
+                input.style.borderColor = '#10b981';
+                input.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.1)';
+            } else if (value.length === 0) {
+                input.style.borderColor = '#ef4444';
+                input.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
+            } else if (value === OperationApp.originalPath) {
+                input.style.borderColor = '#f59e0b';
+                input.style.boxShadow = '0 0 0 4px rgba(245, 158, 11, 0.1)';
+            } else {
+                input.style.borderColor = 'var(--color-border)';
+                input.style.boxShadow = 'none';
+            }
+        }
+
+        function focusDestinationInput() {
+            const pathInput = document.getElementById('destination_path');
+            pathInput.focus();
+            pathInput.select();
+        }
+
+        function startLoadingState() {
+            OperationApp.isProcessing = true;
+            const submitBtn = document.getElementById('submitButton');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            
+            // Update button
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = `<span class="spinner"></span> ${OperationApp.operationType === 'Duplicate' ? 'Duplicating' : 'Relocating'}...`;
+            submitBtn.classList.add('loading-state');
+            submitBtn.disabled = true;
+            
+            // Show progress bar
+            progressBar.style.display = 'block';
+            
+            // Animate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressFill.style.width = progress + '%';
+            }, 200);
+            
+            // Reset after timeout (fallback)
+            setTimeout(() => {
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.classList.remove('loading-state');
+                    submitBtn.disabled = false;
+                    progressBar.style.display = 'none';
+                    progressFill.style.width = '0%';
+                    OperationApp.isProcessing = false;
+                }, 500);
+            }, 5000);
+        }
+
+        function showValidationError(message) {
+            const pathInput = document.getElementById('destination_path');
+            
+            // Create error message element
+            const existingError = document.querySelector('.validation-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'validation-error';
+            errorDiv.style.cssText = `
+                background: #fef2f2;
+                color: #991b1b;
+                padding: 0.75rem 1rem;
+                border-radius: 8px;
+                margin-top: 0.5rem;
+                border: 1px solid #fecaca;
+                animation: shake 0.5s ease-in-out;
+            `;
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            
+            pathInput.parentNode.appendChild(errorDiv);
+            pathInput.focus();
+            
+            // Remove error after 4 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 4000);
+        }
+
+        function createBackgroundParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                setTimeout(() => {
+                    createParticle(particlesContainer);
+                }, i * 300);
+            }
+            
+            // Continue creating particles
+            setInterval(() => {
+                createParticle(particlesContainer);
+            }, 3000);
+        }
+
+        function createParticle(container) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Random horizontal position
+            particle.style.left = Math.random() * 100 + '%';
+            
+            // Random animation duration
+            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            
+            // Random size
+            const size = Math.random() * 3 + 2;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            
+            container.appendChild(particle);
+            
+            // Remove particle after animation
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.remove();
+                }
+            }, 25000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Escape key: go back
+            if (event.key === 'Escape') {
+                window.location.href = `{{ url_for('home_page', bucket=bucket, folder=folder) }}`;
+            }
+            
+            // Ctrl/Cmd + Enter: submit form
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('operationForm').requestSubmit();
+            }
+        });
+
+        // Add CSS for shake animation
+        const shakeCSS = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = shakeCSS;
+        document.head.appendChild(styleSheet);
+
+        // Auto-suggest paths based on current directory
+        function setupPathAutoSuggest() {
+            const pathInput = document.getElementById('destination_path');
+            const currentFolder = '{{ folder }}';
+            
+            pathInput.addEventListener('focus', function() {
+                if (currentFolder && !this.value.includes('/')) {
+                    // Auto-suggest current folder prefix
+                    const filename = this.value;
+                    if (filename && !filename.startsWith(currentFolder + '/')) {
+                        this.value = currentFolder + '/' + filename;
+                        this.setSelectionRange(currentFolder.length + 1, this.value.length);
+                    }
+                }
+            });
+        }
+
+        // Initialize auto-suggest
+        setupPathAutoSuggest();
+    </script>
+</body>
+</html>
